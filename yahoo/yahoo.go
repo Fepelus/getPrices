@@ -32,10 +32,37 @@ func (this yahoo) Url() string {
 }
 
 func call(url string) string {
-	resp, _ := http.Get(url)
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Print(err)
+	}
 	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Print(err)
+	}
 	return string(body)
+}
+
+// Because ledger's parser doesn't accept digits in the commodity name
+// foreach character in the input
+//   map the digits from [0-9] to [JA-I]
+//   otherwise leave character as is
+func translateCommodity(input string) string {
+	output := ""
+	translation_map := map[rune]rune{
+		'0': 'J', '1': 'A', '2': 'B', '3': 'C', '4': 'D',
+		'5': 'E', '6': 'F', '7': 'G', '8': 'H', '9': 'I',
+	}
+	for _, thisrune := range input {
+		val, ok := translation_map[thisrune]
+		if ok {
+			output += string(val)
+		} else {
+			output += string(thisrune)
+		}
+	}
+	return output
 }
 
 func format(csv string) string {
@@ -47,5 +74,6 @@ func format(csv string) string {
 	symsplit := strings.Split(split[0], "\"")
 	qtsplit := strings.Split(symsplit[1], ".")
 	price := strings.TrimSpace(split[4])
-	return fmt.Sprintf("P %s %s:00 %s $%s", dtfmt, clfmt, qtsplit[0], price)
+	commodity := translateCommodity(qtsplit[0])
+	return fmt.Sprintf("P %s %s:00 %s $%s", dtfmt, clfmt, commodity, price)
 }

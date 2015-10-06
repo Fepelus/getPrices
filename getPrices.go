@@ -15,10 +15,7 @@ type Fetcher interface {
 func main() {
 	fetchers := []Fetcher{
 		vanguard.NewVanguard("VAN"),
-		yahoo.NewYahoo("IOO"),
-		yahoo.NewYahoo("RGB"),
-		yahoo.NewYahoo("RKN"),
-		yahoo.NewYahoo("VAP"),
+		yahoo.NewYahoo("GSBG33"),
 	}
 	receiver := make(chan string)
 	for _, fetcher := range fetchers {
