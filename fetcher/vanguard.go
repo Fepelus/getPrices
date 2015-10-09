@@ -1,4 +1,4 @@
-package vanguard
+package fetcher
 
 import (
 	"encoding/json"
@@ -11,23 +11,23 @@ import (
 
 type vanguard string
 
-func NewVanguard(label string) vanguard {
+func NewVanguard(label string) Fetcher {
 	return vanguard(label)
 }
 
 func (this vanguard) Fetch(output chan string) {
-	markup := call(url())
+	markup := this.call(this.url())
 
 	formatted := this.format(markup)
 
 	output <- formatted
 }
 
-func url() string {
+func (this vanguard)url() string {
 	return "https://www.vanguardinvestments.com.au/retail/ret/investments/managed-funds-retail.jsp"
 }
 
-func call(url string) string {
+func (this vanguard)call(url string) string {
 	resp, _ := http.Get(url)
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)

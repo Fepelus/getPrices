@@ -1,4 +1,4 @@
-package yahoo
+package fetcher
 
 import (
 	"fmt"
@@ -10,28 +10,28 @@ import (
 
 type yahoo string
 
-func NewYahoo(label string) yahoo {
+func NewYahoo(label string) Fetcher {
 	return yahoo(label)
 }
 
 func (this yahoo) Fetch(output chan string) {
-	url := this.Url()
+	url := this.url()
 	// http://finance.yahoo.com/d/quotes.csv?s=RKN.AX&f=snd1t1l1
 
-	csv := call(url)
+	csv := this.call(url)
 	// "RKN.AX","RECKON FPO","8/6/2015","12:19pm",2.03
 
-	formatted := format(csv)
-	// P 2015/09/22 16:10:00 RKN $2.00
+	formatted := this.format(csv)
+	// P 2015/08/06 12:19:00 RKN $2.03
 
 	output <- formatted
 }
 
-func (this yahoo) Url() string {
+func (this yahoo) url() string {
 	return fmt.Sprintf("http://finance.yahoo.com/d/quotes.csv?s=%s.AX&f=snd1t1l1", this)
 }
 
-func call(url string) string {
+func (this yahoo) call(url string) string {
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Print(err)
@@ -44,7 +44,7 @@ func call(url string) string {
 	return string(body)
 }
 
-func format(csv string) string {
+func (this yahoo) format(csv string) string {
 	split := strings.Split(csv, ",")
 	date, _ := time.Parse("\"02/1/2006\"", split[2])
 	dtfmt := date.Format("2006/02/01")

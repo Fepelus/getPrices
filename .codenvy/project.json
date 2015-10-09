@@ -1,1 +1,1 @@
-{"builders":{"configs":{}},"mixinTypes":[],"runners":{"configs":{}},"type":"go","attributes":{"language":["go"]},"description":""}
+{"builders":{"configs":{}},"mixinTypes":[],"runners":{"configs":{"project:/getPrices":{"ram":1000,"variables":{"configurationType":"go"},"options":{}}},"default":"project:/getPrices"},"type":"go","attributes":{"language":["go"]},"description":""}
