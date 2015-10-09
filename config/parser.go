@@ -44,15 +44,18 @@ func parseconfig(input string) []entities.Commodity {
 	var output []entities.Commodity
 
 	lines := strings.Split(input, "\n")
-	for _, line := range lines {
-		if len(line) > 0 && line[0] != '#' {
-			tokens := strings.Split(line, " ")
-			if _, ok := brokers[tokens[0]]; ok {
-				output = append(output, entities.NewCommodity(tokens[0], tokens[1]))
-			} else {
-				fmt.Errorf("Parser error: No broker found called %s", tokens[0])
-			}
-		}
+	for line_number, line := range lines {
+     // ignore comments and blank lines
+     if len(strings.TrimSpace(line)) == 0 || line[0] == '#' {
+       continue;
+     }
+
+	  tokens := strings.Split(line, " ")
+	  if _, ok := brokers[tokens[0]]; ok {
+         output = append(output, entities.NewCommodity(tokens[0], tokens[1]))
+     } else {
+       fmt.Fprintf(os.Stderr, "Parser error: No broker found called '%s' in line %d: %s\n", tokens[0], line_number, line)
+     }
 	}
 
 	return output
