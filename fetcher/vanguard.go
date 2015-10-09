@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"strings"
 	"time"
-  
-   "github.com/Fepelus/getPrices/outputter"
-   "github.com/Fepelus/getPrices/entities"
+	"os"
+
+	"github.com/Fepelus/getPrices/outputter"
+	"github.com/Fepelus/getPrices/entities"
 )
 
 type vanguard string
@@ -23,7 +24,7 @@ func (this vanguard) Fetch(output outputter.Outputter) {
 
 	price := this.makePrice(markup)
 
-  output.Append(price)
+	output.Append(price)
 }
 
 func (this vanguard)url() string {
@@ -31,12 +32,17 @@ func (this vanguard)url() string {
 }
 
 func (this vanguard)call(url string) string {
-	resp, _ := http.Get(url)
+	resp, err := http.Get(url)
 	defer resp.Body.Close()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Could not fetch the Vanguard page: ", err)
+		os.Exit(1)
+	}
 	body, _ := ioutil.ReadAll(resp.Body)
 	return string(body)
 }
 
+// To parse the JSON into:
 type Pricedata struct {
 	Effectivelatestdatetime string
 	Pricevaluelatestsell    string
@@ -51,48 +57,36 @@ type Quote struct {
 	Managedfund []Fund
 }
 
+// The markup contains a JSON object with all the data for Vanguard's page
+// and it is all on one line, so here I split the markup up into lines,
+// scan until find the one that has the variable in it, chop off the start
+// of the line which leaves just the JSON object which I can then parse
+// and extract the useful data from.
 func (this vanguard) makePrice(markup string) entities.Price {
-  for _, line := range strings.Split(markup, "\n") {
-		if strings.Index(line, "jsonv =") > -1 {
-			jsonv := []byte(line[12:])
-			var f Quote
-			_ = json.Unmarshal(jsonv, &f)
-			for _, fund := range f.Managedfund {
-				if fund.Benchmark == "S&P/ASX 300 Index" {
-					date, _ := time.Parse(
-						"01/02/2006",
-						fund.Unitpricedata.Effectivelatestdatetime,
-					)
-               return entities.NewPrice(
-                 date,
-                 time.Date(2009, time.November, 10, 17, 0, 0, 0, time.UTC),
-                 string(this),
-                 fund.Unitpricedata.Pricevaluelatestsell,
-               )
-				}
-			}
-		}
-   }
-	return entities.Price{}
-}
-
-func (this vanguard) format(markup string) string {
 	for _, line := range strings.Split(markup, "\n") {
 		if strings.Index(line, "jsonv =") > -1 {
 			jsonv := []byte(line[12:])
 			var f Quote
-			_ = json.Unmarshal(jsonv, &f)
+			err := json.Unmarshal(jsonv, &f)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Could not parse the Vanguard page: ", err)
+				os.Exit(1)
+			}
 			for _, fund := range f.Managedfund {
 				if fund.Benchmark == "S&P/ASX 300 Index" {
 					date, _ := time.Parse(
 						"01/02/2006",
 						fund.Unitpricedata.Effectivelatestdatetime,
 					)
-					dtfmt := date.Format("2006/02/01")
-					return fmt.Sprintf("P %s 17:00:00 %s $%s", dtfmt, this, fund.Unitpricedata.Pricevaluelatestsell)
+					return entities.NewPrice(
+						date,
+						time.Date(2009, time.November, 10, 17, 0, 0, 0, time.UTC),
+						string(this),
+						fund.Unitpricedata.Pricevaluelatestsell,
+					)
 				}
 			}
 		}
 	}
-	return ""
+	return entities.Price{}
 }
