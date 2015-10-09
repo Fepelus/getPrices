@@ -12,4 +12,4 @@ and places to fetch them are set in a config file.
 Design
 -----
 
-![Message Sequencing Chart](https://rawgithub.com/Fepelus/getPrices/msc.png)
+![Message Sequencing Chart](https://raw.githubusercontent.com/Fepelus/getPrices/master/msc.png)
