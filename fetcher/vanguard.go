@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+  
+   "github.com/Fepelus/getPrices/outputter"
+   "github.com/Fepelus/getPrices/entities"
 )
 
 type vanguard string
@@ -15,12 +18,12 @@ func NewVanguard(label string) Fetcher {
 	return vanguard(label)
 }
 
-func (this vanguard) Fetch(output chan string) {
+func (this vanguard) Fetch(output outputter.Outputter) {
 	markup := this.call(this.url())
 
-	formatted := this.format(markup)
+	price := this.makePrice(markup)
 
-	output <- formatted
+  output.Append(price)
 }
 
 func (this vanguard)url() string {
@@ -46,6 +49,31 @@ type Fund struct {
 
 type Quote struct {
 	Managedfund []Fund
+}
+
+func (this vanguard) makePrice(markup string) entities.Price {
+  for _, line := range strings.Split(markup, "\n") {
+		if strings.Index(line, "jsonv =") > -1 {
+			jsonv := []byte(line[12:])
+			var f Quote
+			_ = json.Unmarshal(jsonv, &f)
+			for _, fund := range f.Managedfund {
+				if fund.Benchmark == "S&P/ASX 300 Index" {
+					date, _ := time.Parse(
+						"01/02/2006",
+						fund.Unitpricedata.Effectivelatestdatetime,
+					)
+               return entities.NewPrice(
+                 date,
+                 time.Date(2009, time.November, 10, 17, 0, 0, 0, time.UTC),
+                 string(this),
+                 fund.Unitpricedata.Pricevaluelatestsell,
+               )
+				}
+			}
+		}
+   }
+	return entities.Price{}
 }
 
 func (this vanguard) format(markup string) string {

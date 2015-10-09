@@ -29,12 +29,12 @@ func getConfigFromFile() string {
 		filename = fmt.Sprintf("%s/.portfoliorc", home)
 	}
    if _, err := os.Stat(filename); os.IsNotExist(err) {
-      fmt.Printf("Could find no config file at %s\n", filename)
+      fmt.Fprintf(os.Stderr, "Could find no config file at %s\n", filename)
       os.Exit(1)
    }
 	bytes, filereaderr := ioutil.ReadFile(filename)
 	if filereaderr != nil {
-		fmt.Printf("Error reading %s: %s\n", filename, filereaderr)
+		fmt.Fprintf(os.Stderr, "Error reading %s: %s\n", filename, filereaderr)
       os.Exit(1)
 	}
 	return string(bytes)

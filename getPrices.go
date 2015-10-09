@@ -1,20 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/Fepelus/getPrices/config"
+   "github.com/Fepelus/getPrices/outputter"
 )
 
 func main() {
 	commodities := config.Parse()
 	fetchers := config.MakeFetchers(commodities)
-	receiver := make(chan string)
-	for _, fetcher := range fetchers {
-		go fetcher.Fetch(receiver)
+   outputter := outputter.NewLedgerOutputter(len(fetchers))
+   for _, fetcher := range fetchers {
+		go fetcher.Fetch(outputter)
 	}
-	for _ = range fetchers {
-		fmt.Fprintln(os.Stdout, <-receiver)
-	}
+   outputter.Output()
 }
