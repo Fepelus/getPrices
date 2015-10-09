@@ -10,13 +10,6 @@ import (
 	"github.com/Fepelus/getPrices/fetcher"
 )
 
-type fetcherConstructor func(string) fetcher.Fetcher
-
-var brokers = map[string]fetcherConstructor{
-  "YAHOO":    fetcherConstructor(fetcher.NewYahoo),
-  "VANGUARD": fetcherConstructor(fetcher.NewVanguard),
-}
-
 func Parse() []entities.Commodity {
 	configstring := getConfigFromFile()
 	return parseconfig(configstring)
@@ -51,20 +44,12 @@ func parseconfig(input string) []entities.Commodity {
      }
 
 	  tokens := strings.Split(line, " ")
-	  if _, ok := brokers[tokens[0]]; ok {
+	  if _, ok := fetcher.Brokers[tokens[0]]; ok {
          output = append(output, entities.NewCommodity(tokens[0], tokens[1]))
      } else {
        fmt.Fprintf(os.Stderr, "Parser error: No broker found called '%s' in line %d: %s\n", tokens[0], line_number, line)
      }
 	}
 
-	return output
-}
-
-func MakeFetchers(config []entities.Commodity) []fetcher.Fetcher {
-	var output []fetcher.Fetcher
-	for _, commodity := range config {
-     output = append(output, brokers[commodity.Broker](commodity.Ticker))
-	}
 	return output
 }

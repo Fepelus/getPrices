@@ -27,13 +27,13 @@ line has the format:
 
 `[YAHOO|VANGUARD] [^ ]+`
 
-That is, the start of the line must match a member of a
-set of strings given in the file `/config/parser.go`
-which currently is `YAHOO` or `VANGUARD`. This
-is followed by a single space character and a single
-ticker identifier which is anything that is not a space
-character. If there is a space after the ticker identifier
-then it is ignored along with everything after it.
+That is, the start of the line must match the keys of a
+map given in the file `/fetcher/fetcher.go` which
+currently is `YAHOO` or `VANGUARD`. This is followed by a
+single space character and a single ticker identifier
+which is anything that is not a space character. If there
+is a space after the ticker identifier then the space is
+ignored along with everything on the line after it.
 
 The first token is referred to in the code as a `broker`
 which is not a good name: a better name would be something

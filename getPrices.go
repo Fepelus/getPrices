@@ -3,14 +3,12 @@ package main
 import (
 	"github.com/Fepelus/getPrices/config"
    "github.com/Fepelus/getPrices/outputter"
+   "github.com/Fepelus/getPrices/fetcher"
 )
 
 func main() {
 	commodities := config.Parse()
-	fetchers := config.MakeFetchers(commodities)
-   outputter := outputter.NewLedgerOutputter(len(fetchers))
-   for _, fetcher := range fetchers {
-		go fetcher.Fetch(outputter)
-	}
+   outputter := outputter.NewLedgerOutputter(len(commodities))
+   fetcher.FetchAndOutput(commodities, outputter)
    outputter.Output()
 }
