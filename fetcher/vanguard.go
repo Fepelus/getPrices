@@ -74,8 +74,8 @@ func (this vanguard) makePrice(markup string) entities.Price {
 			}
 			for _, fund := range f.Managedfund {
 				if fund.Benchmark == "S&P/ASX 300 Index" {
-					date, _ := time.Parse(
-						"01/02/2006",
+              date, _ := time.Parse(
+						"02/01/2006",
 						fund.Unitpricedata.Effectivelatestdatetime,
 					)
 					return entities.NewPrice(

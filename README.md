@@ -2,9 +2,10 @@ getPrices
 =========
 
 Tool for getting stock prices of my current portfolio.
-It produces output appropriate for the ledger-cli tool
-that I use to track my finances. Certainly this tool is
-for my own use.
+It produces output appropriate for the
+[ledger-cli](http://www.ledger-cli.org/)
+tool that I use to track my finances. Certainly this
+tool is for my own use.
 
 Symbols to fetch and places to fetch them are set in a
 config file.
@@ -13,7 +14,7 @@ Config file
 ---------
 
 Put the name of your config file in the `GETPRICES_FILE`
-system environment. If this is not set then the tool
+environment variable. If this is not set then the tool
 looks for `${HOME}/.portfoliorc` and if it finds nothing
 there then it errors out.
 
