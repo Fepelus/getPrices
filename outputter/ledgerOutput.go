@@ -30,7 +30,7 @@ func (this ledgerOutputter) Output() {
 }
 
 func (this ledgerOutputter) formatPriceForLedger(input entities.Price) {
-	dtfmt := input.Date.Format("2006/02/01")
+	dtfmt := input.Date.Format("2006/01/02")
 	clfmt := input.Clock.Format("15:04")
 	fmt.Fprintf(os.Stdout, "P %s %s:00 %s $%s\n", dtfmt, clfmt, input.Ticker, input.Price)
 }
