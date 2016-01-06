@@ -1,14 +1,14 @@
 package fetcher
 
 import (
-   "fmt"
-   "io/ioutil"
-   "net/http"
-   "strings"
-   "time"
-  
-   "github.com/Fepelus/getPrices/outputter"
-   "github.com/Fepelus/getPrices/entities"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/Fepelus/getPrices/entities"
+	"github.com/Fepelus/getPrices/outputter"
 )
 
 type yahoo string
@@ -48,7 +48,7 @@ func (this yahoo) call(url string) string {
 
 func (this yahoo) makePrice(csv string) entities.Price {
 	split := strings.Split(csv, ",")
-	date, _ := time.Parse("\"01/2/2006\"", split[2])
+	date, _ := time.Parse("\"1/2/2006\"", split[2])
 	clock, _ := time.Parse("\"15:04pm\"", split[3])
 	symsplit := strings.Split(split[0], "\"")
 	qtsplit := strings.Split(symsplit[1], ".")
