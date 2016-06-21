@@ -22,6 +22,10 @@ func getConfigFromFile() string {
 		filename = fmt.Sprintf("%s/.portfoliorc", home)
 	}
    if _, err := os.Stat(filename); os.IsNotExist(err) {
+		home := os.Getenv("HOME")
+		filename = fmt.Sprintf("%s/.config/portfolio/portfoliorc", home)
+   }
+   if _, err := os.Stat(filename); os.IsNotExist(err) {
       fmt.Fprintf(os.Stderr, "Could find no config file at %s\n", filename)
       os.Exit(1)
    }

@@ -83,15 +83,20 @@ func (this bloomberg) makePrice(markup string) entities.Price {
 				fmt.Fprintln(os.Stderr, "Could not parse the Bloomberg page")
 				os.Exit(1)
             }
-            price := children[0].Path("basicQuote.price").Data().(float64)
-            date := children[0].Path("basicQuote.priceDate").Data().(string)
-            parsedDate, _ := time.Parse("1/2/2006", date)
-            timed := children[0].Path("basicQuote.priceTime").Data().(string)
-            parsedTime, _ := time.Parse("3:04 PM", timed)
-            newPrice := entities.NewPrice(parsedDate, parsedTime, string(this),
-                strconv.FormatFloat(price, 'f', -1, 64),
-            )
-            return newPrice
+            for _, child := range children {
+                if (!child.Exists("basicQuote", "price")) {
+                    continue;
+                }
+                price := child.Path("basicQuote.price").Data().(float64)
+                date := child.Path("basicQuote.priceDate").Data().(string)
+                parsedDate, _ := time.Parse("1/2/2006", date)
+                timed := child.Path("basicQuote.priceTime").Data().(string)
+                parsedTime, _ := time.Parse("3:04 PM", timed)
+                newPrice := entities.NewPrice(parsedDate, parsedTime, string(this),
+                    strconv.FormatFloat(price, 'f', -1, 64),
+                )
+                return newPrice
+            }
 		}
 	}
 	return entities.Price{}
