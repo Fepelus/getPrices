@@ -48,6 +48,7 @@ func (this yahoo) call(url string) string {
 
 func (this yahoo) makePrice(csv string) entities.Price {
 	split := strings.Split(csv, ",")
+    fmt.Println(split)
 	date, _ := time.Parse("\"1/2/2006\"", split[2])
 	clock, _ := time.Parse("\"15:04pm\"", split[3])
 	symsplit := strings.Split(split[0], "\"")

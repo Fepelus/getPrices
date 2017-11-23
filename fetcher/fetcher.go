@@ -16,6 +16,8 @@ var Brokers = map[string]fetcherConstructor{
 	"VANGUARD": fetcherConstructor(NewVanguard),
 	"QUANDL":   fetcherConstructor(NewQuandl),
 	"BLOOMBERG":  fetcherConstructor(NewBloomberg),
+	"EODDATA":  fetcherConstructor(NewEoddata),
+	"FIXER":  fetcherConstructor(NewFixer),
 }
 
 func FetchAndOutput(commodities []entities.Commodity, output outputter.Outputter) {

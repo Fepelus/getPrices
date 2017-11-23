@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -29,7 +28,7 @@ func (this vanguard) Fetch(output outputter.Outputter) {
 }
 
 func (this vanguard) url() string {
-	return "https://www.vanguardinvestments.com.au/retail/jsp/investments/retail?portId=8129##prices-and-distributions-tab"
+    return "https://api.vanguard.com/rs/gre/gra/1.3.0/datasets/auw-retail-listview-data.jsonp"
 }
 
 func (this vanguard) call(url string) string {
@@ -44,21 +43,14 @@ func (this vanguard) call(url string) string {
 }
 
 // To parse the JSON into:
-type MeasureType struct {
-	MeasureCode string
-}
-type Pricedata struct {
-	AsOfDate    string
-	Price       float64
-	MeasureType MeasureType
-}
-
-type Profile struct {
-	Price []Pricedata
+type Fund struct {
+	NavPrice string
+	AsOfDate string
+	Identifier string
 }
 
 type VanguardJson struct {
-	Fund_price []Profile
+	FundData map[string]Fund
 }
 
 // The markup contains a JSON object with all the data for Vanguard's page
@@ -67,32 +59,29 @@ type VanguardJson struct {
 // of the line which leaves just the JSON object which I can then parse
 // and extract the useful data from.
 func (this vanguard) makePrice(markup string) entities.Price {
-	for _, line := range strings.Split(markup, "\n") {
-		if strings.Index(line, "pricenav =") > -1 {
-			jsonv := []byte(line[30 : len(line)-2])
+		if strings.Index(markup, "callback") > -1 {
+			jsonv := []byte(markup[9 : len(markup)-1])
 			var f VanguardJson
 			err := json.Unmarshal(jsonv, &f)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "Could not parse the Vanguard page: ", err)
 				os.Exit(1)
 			}
-			for _, profile := range f.Fund_price {
-				for _, pricedata := range profile.Price {
-					if pricedata.MeasureType.MeasureCode == "SELL" {
+			for _, funddata := range f.FundData {
+					if funddata.Identifier == string(this) {
 						date, _ := time.Parse(
-							"2006-01-02T15:04:05-07:00",
-							pricedata.AsOfDate,
+                            "02 Jan 2006",
+							funddata.AsOfDate,
 						)
 						return entities.NewPrice(
 							date,
 							time.Date(2009, time.November, 10, 17, 0, 0, 0, time.UTC),
-							string(this),
-							strconv.FormatFloat(pricedata.Price, 'f', -1, 64),
+							"VAN",
+                            funddata.NavPrice[1 : len(funddata.NavPrice)],
+							//strconv.FormatFloat(funddata.NavPrice, 'f', -1, 64),
 						)
 					}
-				}
-			}
-		}
-	}
+            }
+        }
 	return entities.Price{}
 }

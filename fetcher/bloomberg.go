@@ -2,16 +2,11 @@ package fetcher
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-    "strconv"
-    "strings"
     "time"
 
 	"github.com/Fepelus/getPrices/entities"
 	"github.com/Fepelus/getPrices/outputter"
-	"github.com/Jeffail/gabs"
+    "github.com/namsral/microdata"
 )
 
 type bloomberg string
@@ -21,9 +16,10 @@ func NewBloomberg(label string) Fetcher {
 }
 
 func (this bloomberg) Fetch(output outputter.Outputter) {
-	markup := this.call(this.url())
+    var data *microdata.Microdata
+    data, _ = microdata.ParseURL(this.url())
 
-	price := this.makePrice(markup)
+	price := this.makePrice(data)
 
 	output.Append(price)
 }
@@ -33,71 +29,15 @@ func (this bloomberg) url() string {
 	//return fmt.Sprintf("http://www.tradingroom.com.au/apps/qt/quote.ac?code=%s", this)
 }
 
-func (this bloomberg) call(url string) string {
-	resp, err := http.Get(url)
-	defer resp.Body.Close()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Could not fetch the Bloomberg page: ", err)
-		os.Exit(1)
-	}
-	body, _ := ioutil.ReadAll(resp.Body)
-	return string(body)
-}
 
-// To parse the JSON into:
-/*
-type MeasureType struct {
-	MeasureCode string
-}
-type Pricedata struct {
-	AsOfDate    string
-	Price       float64
-	MeasureType MeasureType
-}
-
-type Profile struct {
-	Price []Pricedata
-}
-
-type BloombergJson struct {
-	Fund_price []Profile
-}
-*/
-
-// The markup contains a JSON object with all the data for Bloomberg's page
-// and it is all on one line, so here I split the markup up into lines,
-// scan until find the one that has the variable in it, chop off the start
-// of the line which leaves just the JSON object which I can then parse
-// and extract the useful data from.
-func (this bloomberg) makePrice(markup string) entities.Price {
-	for _, line := range strings.Split(markup, "\n") {
-		if strings.Index(line, "bootstrappedData: ") > -1 {
-			jsonv := []byte(line[18 : len(line)])
-			jsonParsed, err := gabs.ParseJSON(jsonv)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Could not parse the Bloomberg page: ", err)
-				os.Exit(1)
-			}
-            children, ok := jsonParsed.Children()
-            if ok != nil {
-				fmt.Fprintln(os.Stderr, "Could not parse the Bloomberg page")
-				os.Exit(1)
-            }
-            for _, child := range children {
-                if (!child.Exists("basicQuote", "price")) {
-                    continue;
-                }
-                price := child.Path("basicQuote.price").Data().(float64)
-                date := child.Path("basicQuote.priceDate").Data().(string)
-                parsedDate, _ := time.Parse("1/2/2006", date)
-                timed := child.Path("basicQuote.priceTime").Data().(string)
-                parsedTime, _ := time.Parse("3:04 PM", timed)
-                newPrice := entities.NewPrice(parsedDate, parsedTime, string(this),
-                    strconv.FormatFloat(price, 'f', -1, 64),
-                )
-                return newPrice
-            }
-		}
-	}
+func (this bloomberg) makePrice(data *microdata.Microdata) entities.Price {
+    for i := 0; i < len(data.Items) ; i++ {
+        if (data.Items[i].Types[0] == "http://schema.org/Intangible/FinancialQuote") {
+            price := data.Items[i].Properties["price"][0].(string)
+            quoteTime := data.Items[i].Properties["quoteTime"][0].(string)
+            parsedTime, _ := time.Parse(time.RFC3339, quoteTime)
+            return entities.NewPrice(parsedTime.Local(), parsedTime.Local(), string(this), price)
+        }
+    }
 	return entities.Price{}
 }
